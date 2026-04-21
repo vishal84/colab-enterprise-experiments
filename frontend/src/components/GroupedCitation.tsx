@@ -1,0 +1,77 @@
+import React, { useState } from 'react';
+import { BookOpen, MapPin, Database, Hash } from 'lucide-react';
+
+export interface SourceInfo {
+  referenceId: string;
+  sourceText?: string;
+  blobAttachments?: { name: string; content: string; mimeType: string }[];
+  structData?: Record<string, any>;
+}
+
+export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: string[], sourcesMap: Record<string, SourceInfo> }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Collect the valid sources for these IDs
+  const validSources = citationIds.map(id => sourcesMap[id]).filter(Boolean);
+
+  if (validSources.length === 0) {
+     return <span className="text-gray-400 text-xs ml-1">[{citationIds.join(',')}]</span>;
+  }
+
+  return (
+    <span className="relative inline-block ml-1">
+      <button 
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+        className="inline-flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-bold px-2 py-0.5 rounded cursor-help transition-colors"
+      >
+        <BookOpen className="w-3 h-3 mr-1" />
+        {citationIds.length} {citationIds.length > 1 ? 'sources' : 'source'}
+      </button>
+
+      {isOpen && (
+        <div className="absolute z-10 bottom-full left-1/2 -translate-x-1/2 mb-2 w-80 max-h-96 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 p-4"
+             onMouseEnter={() => setIsOpen(true)}
+             onMouseLeave={() => setIsOpen(false)}
+        >
+          <h4 className="text-sm font-bold text-gray-800 mb-3 border-b pb-2">Grounded Context</h4>
+          {validSources.map((source, idx) => (
+            <div key={idx} className="mb-4 last:mb-0">
+               <div className="flex items-start gap-2 mb-1">
+                 <Hash className="w-4 h-4 text-gray-400 shrink-0 mt-0.5" />
+                 <span className="text-xs font-semibold text-gray-600">Source [{source.referenceId}]</span>
+               </div>
+               
+               {source.structData && source.structData.source_file && (
+                 <div className="flex items-center gap-1 mb-2 ml-6 text-xs text-blue-600 bg-blue-50 w-fit px-2 py-1 rounded">
+                   <Database className="w-3 h-3" />
+                   {source.structData.source_file} {source.structData.page ? `(Page ${source.structData.page})` : ''}
+                 </div>
+               )}
+
+               {source.sourceText && (
+                  <p className="text-xs text-gray-600 ml-6 italic bg-gray-50 border-l-2 border-gray-300 pl-2 py-1">
+                    "{source.sourceText.substring(0, 300)}{source.sourceText.length > 300 ? '...' : ''}"
+                  </p>
+               )}
+
+               {/* Render BYOC inline images if matched! */}
+               {source.blobAttachments && source.blobAttachments.map((blob, bIdx) => (
+                   <div key={bIdx} className="mt-2 ml-6">
+                      <p className="text-xs text-indigo-500 font-semibold mb-1 flex items-center gap-1">
+                        <MapPin className="w-3 h-3"/> Referenced Visual (Chart/Graph)
+                      </p>
+                      <img 
+                        src={`data:${blob.mimeType};base64,${blob.content}`} 
+                        alt="Chunk Visualization" 
+                        className="rounded border border-gray-200 w-full h-auto max-h-48 object-contain bg-gray-50"
+                      />
+                   </div>
+               ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </span>
+  );
+}
