@@ -130,3 +130,40 @@ resource "google_compute_firewall" "allow_egress_internet" {
     protocol = "all"
   }
 }
+
+# ------------------------------------------------------------------------------
+# API Enabled & Colab Enterprise / Default Compute SA Configuration
+# ------------------------------------------------------------------------------
+
+data "google_project" "project" {
+  project_id = var.project_id
+}
+
+resource "google_project_service" "colab_apis" {
+  for_each = toset([
+    "aiplatform.googleapis.com",
+    "documentai.googleapis.com",
+    "discoveryengine.googleapis.com",
+    "storage.googleapis.com",
+    "compute.googleapis.com"
+  ])
+
+  project            = var.project_id
+  service            = each.key
+  disable_on_destroy = false
+}
+
+resource "google_project_iam_member" "compute_sa_roles" {
+  for_each = toset([
+    "roles/documentai.editor",
+    "roles/discoveryengine.editor",
+    "roles/aiplatform.user",
+    "roles/storage.admin"
+  ])
+
+  project = var.project_id
+  role    = each.key
+  member  = "serviceAccount:${data.google_project.project.number}-compute@developer.gserviceaccount.com"
+  
+  depends_on = [google_project_service.colab_apis]
+}
