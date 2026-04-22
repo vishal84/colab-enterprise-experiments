@@ -13,3 +13,7 @@ override.tf.json
 .terraformrc
 terraform.rc
 *.DS_Store
+
+# Frontend
+node_modules/
+.next/
