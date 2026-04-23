@@ -1,11 +1,117 @@
-import React, { useState } from 'react';
-import { Database, Hash, Image, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Database, Hash, Image, MapPin, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 export interface SourceInfo {
   referenceId: string;
   sourceText?: string;
   blobAttachments?: { name: string; content: string; mimeType: string }[];
   structData?: Record<string, any>;
+}
+
+function SourceModal({ validSources, onClose }: { validSources: SourceInfo[], onClose: () => void }) {
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [onClose]);
+
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
+      
+      {/* Modal */}
+      <div 
+        className="relative bg-white rounded-xl shadow-2xl border border-gray-200 w-[720px] max-w-[90vw] max-h-[85vh] overflow-y-auto"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
+          <h3 className="text-base font-bold text-gray-800">
+            Grounded Context — {validSources.length} {validSources.length > 1 ? 'Sources' : 'Source'}
+          </h3>
+          <button 
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Sources */}
+        <div className="px-6 py-4 space-y-5">
+          {validSources.map((source, idx) => (
+            <div key={idx} className="pb-5 border-b border-gray-100 last:border-0 last:pb-0">
+              {/* Source header */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center justify-center w-6 h-6 rounded bg-gray-100 shrink-0">
+                  <Hash className="w-3.5 h-3.5 text-gray-500" />
+                </div>
+                <span className="text-sm font-semibold text-gray-700">Source [{source.referenceId}]</span>
+              </div>
+              
+              {/* Source file and page info from structData */}
+              {source.structData && (source.structData.source || source.structData.source_file) && (
+                <div className="flex items-center gap-1.5 mb-3 ml-8 text-xs text-blue-700 bg-blue-50 w-fit px-2.5 py-1 rounded-md border border-blue-100">
+                  <Database className="w-3.5 h-3.5" />
+                  <span className="font-medium">
+                    {source.structData.source || source.structData.source_file}
+                    {(source.structData.page_number || source.structData.page) && 
+                      ` — Page ${source.structData.page_number || source.structData.page}`}
+                  </span>
+                </div>
+              )}
+
+              {/* Source text */}
+              {source.sourceText && (
+                <div className="ml-8 mb-3">
+                  <p className="text-xs text-gray-500 font-medium mb-1 uppercase tracking-wider">Excerpt</p>
+                  <p className="text-sm text-gray-600 italic bg-gray-50 border-l-3 border-gray-300 pl-3 py-2 leading-relaxed rounded-r">
+                    &quot;{source.sourceText.substring(0, 600)}{source.sourceText.length > 600 ? '...' : ''}&quot;
+                  </p>
+                </div>
+              )}
+
+              {/* Render BYOC inline images if matched (original blob approach) */}
+              {source.blobAttachments && source.blobAttachments.map((blob, bIdx) => (
+                <div key={bIdx} className="ml-8 mt-3">
+                  <p className="text-xs text-indigo-600 font-semibold mb-2 flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5"/> Referenced Visual (Chart/Graph)
+                  </p>
+                  <img 
+                    src={`data:${blob.mimeType};base64,${blob.content}`} 
+                    alt="Chunk Visualization" 
+                    className="rounded-lg border border-gray-200 w-full h-auto max-h-[400px] object-contain bg-gray-50 shadow-sm"
+                  />
+                </div>
+              ))}
+
+              {/* Render exhibit images from GCS (structData workaround) */}
+              {!source.blobAttachments?.length && source.structData?.image_gcs_path && (
+                <div className="ml-8 mt-3">
+                  <p className="text-xs text-indigo-600 font-semibold mb-2 flex items-center gap-1.5">
+                    <Image className="w-3.5 h-3.5"/> Exhibit Visual
+                  </p>
+                  <img 
+                    src={`/api/image?path=${encodeURIComponent(source.structData.image_gcs_path)}`} 
+                    alt={source.structData.title || "Exhibit image"} 
+                    className="rounded-lg border border-gray-200 w-full h-auto max-h-[400px] object-contain bg-gray-50 shadow-sm"
+                    loading="lazy"
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
 }
 
 export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: string[], sourcesMap: Record<string, SourceInfo> }) {
@@ -23,80 +129,20 @@ export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: stri
     : `[1 source]`;
 
   return (
-    <span 
-      className="relative inline-block mx-0.5 align-baseline"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
-    >
+    <>
       <button 
-        onClick={() => setIsOpen(prev => !prev)}
-        className="inline-flex items-center text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded cursor-pointer transition-colors border border-blue-200/60"
+        onClick={() => setIsOpen(true)}
+        className="inline-flex items-center text-[11px] font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 px-1.5 py-0.5 rounded cursor-pointer transition-colors border border-blue-200/60 mx-0.5 align-baseline"
       >
         {label}
       </button>
 
       {isOpen && (
-        <>
-          {/* Invisible bridge to prevent mouseLeave when crossing the gap */}
-          <div className="absolute bottom-full left-0 w-full h-3" />
-          <div className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-1 w-80 max-h-96 overflow-y-auto bg-white rounded-lg shadow-xl border border-gray-200 p-4">
-            <h4 className="text-xs font-bold text-gray-800 mb-3 border-b border-gray-100 pb-2">Grounded Context</h4>
-            {validSources.map((source, idx) => (
-              <div key={idx} className="mb-3 last:mb-0">
-                 <div className="flex items-start gap-2 mb-1">
-                   <Hash className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
-                   <span className="text-[11px] font-semibold text-gray-600">Source [{source.referenceId}]</span>
-                 </div>
-                 
-                 {/* Source file and page info from structData */}
-                 {source.structData && (source.structData.source || source.structData.source_file) && (
-                   <div className="flex items-center gap-1 mb-1.5 ml-5 text-[11px] text-blue-600 bg-blue-50 w-fit px-2 py-0.5 rounded">
-                     <Database className="w-3 h-3" />
-                     {source.structData.source || source.structData.source_file}
-                     {(source.structData.page_number || source.structData.page) && 
-                       ` (Page ${source.structData.page_number || source.structData.page})`}
-                   </div>
-                 )}
-
-                 {source.sourceText && (
-                    <p className="text-[11px] text-gray-500 ml-5 italic bg-gray-50 border-l-2 border-gray-200 pl-2 py-1 leading-relaxed">
-                      &quot;{source.sourceText.substring(0, 300)}{source.sourceText.length > 300 ? '...' : ''}&quot;
-                    </p>
-                 )}
-
-                 {/* Render BYOC inline images if matched (original blob approach) */}
-                 {source.blobAttachments && source.blobAttachments.map((blob, bIdx) => (
-                     <div key={bIdx} className="mt-2 ml-5">
-                        <p className="text-[11px] text-indigo-500 font-semibold mb-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3"/> Referenced Visual (Chart/Graph)
-                        </p>
-                        <img 
-                          src={`data:${blob.mimeType};base64,${blob.content}`} 
-                          alt="Chunk Visualization" 
-                          className="rounded border border-gray-200 w-full h-auto max-h-48 object-contain bg-gray-50"
-                        />
-                     </div>
-                 ))}
-
-                 {/* Render exhibit images from GCS (structData workaround) */}
-                 {!source.blobAttachments?.length && source.structData?.image_gcs_path && (
-                     <div className="mt-2 ml-5">
-                        <p className="text-[11px] text-indigo-500 font-semibold mb-1 flex items-center gap-1">
-                          <Image className="w-3 h-3"/> Exhibit Visual
-                        </p>
-                        <img 
-                          src={`/api/image?path=${encodeURIComponent(source.structData.image_gcs_path)}`} 
-                          alt={source.structData.title || "Exhibit image"} 
-                          className="rounded border border-gray-200 w-full h-auto max-h-48 object-contain bg-gray-50"
-                          loading="lazy"
-                        />
-                     </div>
-                 )}
-              </div>
-            ))}
-          </div>
-        </>
+        <SourceModal 
+          validSources={validSources} 
+          onClose={() => setIsOpen(false)} 
+        />
       )}
-    </span>
+    </>
   );
 }
