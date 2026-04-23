@@ -66,11 +66,16 @@ export async function POST(req: Request) {
     // Debug: log the answer structure to verify citations format
     if (data.answer) {
       console.log("=== Answer API Response ===");
-      console.log("Citations:", JSON.stringify(data.answer.citations, null, 2));
+      console.log("Citations count:", data.answer.citations?.length);
       console.log("References count:", data.answer.references?.length);
-      if (data.answer.references?.[0]) {
-        console.log("First reference sample:", JSON.stringify(data.answer.references[0], null, 2).substring(0, 500));
-      }
+      // Log each reference's metadata to see structData and document info
+      data.answer.references?.forEach((ref: any, i: number) => {
+        const chunk = ref.chunkInfo;
+        const docMeta = chunk?.documentMetadata;
+        console.log(`  Ref[${i}]: structData =`, JSON.stringify(docMeta?.structData || ref.structData || chunk?.structData || 'NONE'));
+        console.log(`  Ref[${i}]: has blobAttachments =`, !!(chunk?.blobAttachments?.length));
+        console.log(`  Ref[${i}]: document =`, docMeta?.uri || 'no-uri');
+      });
     }
     
     return NextResponse.json(data);
