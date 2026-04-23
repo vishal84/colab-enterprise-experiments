@@ -57,37 +57,37 @@ This project demonstrates a production-ready pipeline for enterprises that need 
 ┌──────────────────────────────────────────────────────────────────┐
 │                        GCP Project                               │
 │                                                                  │
-│  ┌─────────────┐    ┌────────────────┐    ┌──────────────────┐  │
-│  │  Terraform   │───▶│  VPC / NAT /   │    │  IAM / API       │  │
-│  │  (Phase 1)   │    │  Firewall      │    │  Enablement      │  │
-│  └─────────────┘    └────────────────┘    └──────────────────┘  │
+│  ┌─────────────┐    ┌────────────────┐    ┌──────────────────┐   │
+│  │  Terraform  │───▶│  VPC / NAT /   │    │  IAM / API       │   │
+│  │  (Phase 1)  │    │  Firewall      │    │  Enablement      │   │
+│  └─────────────┘    └────────────────┘    └──────────────────┘   │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │            Colab Enterprise Notebook (Phase 2)           │    │
-│  │                                                         │    │
-│  │  PDF ──▶ Gemini Vision ──▶ PyMuPDF Crop ──▶ Doc AI OCR  │    │
-│  │               │                                  │       │    │
-│  │               ▼                                  ▼       │    │
-│  │         Exhibit Images              Page Text Chunks     │    │
-│  │               │                          │               │    │
-│  │               └──────────┬───────────────┘               │    │
-│  │                          ▼                               │    │
-│  │                   BYOC JSONL + GCS                       │    │
-│  │                          │                               │    │
-│  │                          ▼                               │    │
-│  │              Vertex AI Search Data Store                 │    │
-│  │              + Search App (Engine)                       │    │
-│  └─────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────┐     │
+│  │            Colab Enterprise Notebook (Phase 2)          │     │
+│  │                                                         │     │
+│  │  PDF ──▶ Gemini Vision ──▶ PyMuPDF Crop ──▶ Doc AI OCR  │     │
+│  │               │                                  │      │     │
+│  │               ▼                                  ▼      │     │
+│  │         Exhibit Images             Page Text Chunks     │     │
+│  │               │                          │              │     │
+│  │               └──────────┬───────────────┘              │     │
+│  │                          ▼                              │     │
+│  │                   BYOC JSONL + GCS                      │     │
+│  │                          │                              │     │
+│  │                          ▼                              │     │
+│  │              Vertex AI Search Data Store                │     │
+│  │              + Search App (Engine)                      │     │
+│  └─────────────────────────────────────────────────────────┘     │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────┐    │
-│  │              Next.js Frontend (Phase 3)                  │    │
-│  │                                                         │    │
-│  │  User Query ──▶ /api/search ──▶ Answer API (v1alpha)    │    │
-│  │                                       │                 │    │
-│  │  Chat UI ◀── Annotated Answer + Citations + Images      │    │
-│  │                                                         │    │
-│  │  Image Proxy ──▶ /api/image ──▶ GCS (authenticated)     │    │
-│  └─────────────────────────────────────────────────────────┘    │
+│  ┌─────────────────────────────────────────────────────────┐     │
+│  │              Next.js Frontend (Phase 3)                 │     │
+│  │                                                         │     │
+│  │  User Query ──▶ /api/search ──▶ Answer API (v1alpha)    │     │
+│  │                                       │                 │     │
+│  │  Chat UI ◀── Annotated Answer + Citations + Images      │     │
+│  │                                                         │     │
+│  │  Image Proxy ──▶ /api/image ──▶ GCS (authenticated)     │     │
+│  └─────────────────────────────────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
