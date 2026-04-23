@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google-cloud/discoveryengine": "^2.6.0",
+    "@google-cloud/storage": "^7.19.0",
     "clsx": "^2.1.1",
     "google-auth-library": "^10.6.2",
     "lucide-react": "^1.8.0",

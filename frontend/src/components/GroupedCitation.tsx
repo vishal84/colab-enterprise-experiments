@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, MapPin, Database, Hash } from 'lucide-react';
+import { BookOpen, MapPin, Database, Hash, Image } from 'lucide-react';
 
 export interface SourceInfo {
   referenceId: string;
@@ -45,10 +45,13 @@ export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: stri
                    <span className="text-xs font-semibold text-gray-600">Source [{source.referenceId}]</span>
                  </div>
                  
-                 {source.structData && source.structData.source_file && (
+                 {/* Source file and page info from structData */}
+                 {source.structData && (source.structData.source || source.structData.source_file) && (
                    <div className="flex items-center gap-1 mb-2 ml-6 text-xs text-blue-600 bg-blue-50 w-fit px-2 py-1 rounded">
                      <Database className="w-3 h-3" />
-                     {source.structData.source_file} {source.structData.page ? `(Page ${source.structData.page})` : ''}
+                     {source.structData.source || source.structData.source_file}
+                     {(source.structData.page_number || source.structData.page) && 
+                       ` (Page ${source.structData.page_number || source.structData.page})`}
                    </div>
                  )}
 
@@ -58,7 +61,7 @@ export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: stri
                     </p>
                  )}
 
-                 {/* Render BYOC inline images if matched! */}
+                 {/* Render BYOC inline images if matched (original blob approach) */}
                  {source.blobAttachments && source.blobAttachments.map((blob, bIdx) => (
                      <div key={bIdx} className="mt-2 ml-6">
                         <p className="text-xs text-indigo-500 font-semibold mb-1 flex items-center gap-1">
@@ -71,6 +74,21 @@ export function GroupedCitation({ citationIds, sourcesMap }: { citationIds: stri
                         />
                      </div>
                  ))}
+
+                 {/* Render exhibit images from GCS (structData workaround) */}
+                 {!source.blobAttachments?.length && source.structData?.image_gcs_path && (
+                     <div className="mt-2 ml-6">
+                        <p className="text-xs text-indigo-500 font-semibold mb-1 flex items-center gap-1">
+                          <Image className="w-3 h-3"/> Exhibit Visual
+                        </p>
+                        <img 
+                          src={`/api/image?path=${encodeURIComponent(source.structData.image_gcs_path)}`} 
+                          alt={source.structData.title || "Exhibit image"} 
+                          className="rounded border border-gray-200 w-full h-auto max-h-48 object-contain bg-gray-50"
+                          loading="lazy"
+                        />
+                     </div>
+                 )}
               </div>
             ))}
           </div>

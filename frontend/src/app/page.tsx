@@ -66,11 +66,13 @@ export default function SearchChat() {
       references.forEach((ref: any, idx: number) => {
           const id = String(idx);
           const chunk = ref.chunkInfo;
+          // structData is inside chunkInfo.documentMetadata.structData
+          const docMeta = chunk?.documentMetadata;
           sourcesMap[id] = {
               referenceId: id,
               sourceText: chunk?.content,
               blobAttachments: chunk?.blobAttachments,
-              structData: ref.structData || chunk?.structData
+              structData: docMeta?.structData || ref.structData || chunk?.structData
           };
       });
 
