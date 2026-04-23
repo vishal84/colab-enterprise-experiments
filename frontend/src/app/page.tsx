@@ -56,14 +56,28 @@ export default function SearchChat() {
       const answerBlock = data.answer;
       if (!answerBlock) throw new Error("No answer returned from Discovery Engine.");
       
-      const text = answerBlock.answerText || "I couldn't find an answer to that.";
+      const rawText = answerBlock.answerText || "I couldn't find an answer to that.";
       const citations = answerBlock.citations || [];
+      const references = answerBlock.references || [];
       
+      // Build sourcesMap from the references array (which has chunkInfo with content & blobs)
       const sourcesMap: Record<string, SourceInfo> = {};
 
+      references.forEach((ref: any, idx: number) => {
+          const id = String(idx);
+          const chunk = ref.chunkInfo;
+          sourcesMap[id] = {
+              referenceId: id,
+              sourceText: chunk?.content,
+              blobAttachments: chunk?.blobAttachments,
+              structData: ref.structData || chunk?.structData
+          };
+      });
+
+      // Also merge any source-level data from citations themselves
       citations.forEach((c: any) => {
           c.sources?.forEach((s: any) => {
-              if (s.referenceId) {
+              if (s.referenceId && !sourcesMap[s.referenceId]) {
                  sourcesMap[s.referenceId] = {
                      referenceId: s.referenceId,
                      sourceText: s.chunkInfo?.content,
@@ -74,9 +88,36 @@ export default function SearchChat() {
           });
       });
 
+      // Inject inline [N] citation markers into the text at the correct positions.
+      // The Answer API provides citations as {startIndex, endIndex, sources:[{referenceId}]}
+      // We insert markers at each endIndex position, working backwards to preserve offsets.
+      interface CitationInsert {
+        position: number;
+        marker: string;
+      }
+
+      const inserts: CitationInsert[] = [];
+      citations.forEach((c: any) => {
+          const endIdx = c.endIndex ?? rawText.length;
+          const refIds = (c.sources || []).map((s: any) => s.referenceId).filter(Boolean);
+          if (refIds.length > 0) {
+            // Build marker like [1] or [1][2] for multiple sources
+            const marker = refIds.map((id: string) => `[${id}]`).join('');
+            inserts.push({ position: endIdx, marker });
+          }
+      });
+
+      // Sort by position descending so earlier inserts don't shift later positions
+      inserts.sort((a, b) => b.position - a.position);
+
+      let annotatedText = rawText;
+      for (const ins of inserts) {
+        annotatedText = annotatedText.slice(0, ins.position) + ins.marker + annotatedText.slice(ins.position);
+      }
+
       setMessages(prev => [...prev, { 
         role: 'model', 
-        content: text,
+        content: annotatedText,
         sourcesMap
       }]);
 

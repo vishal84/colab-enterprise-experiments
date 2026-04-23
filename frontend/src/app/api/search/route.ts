@@ -62,6 +62,17 @@ export async function POST(req: Request) {
     }
 
     const data = await response.json();
+    
+    // Debug: log the answer structure to verify citations format
+    if (data.answer) {
+      console.log("=== Answer API Response ===");
+      console.log("Citations:", JSON.stringify(data.answer.citations, null, 2));
+      console.log("References count:", data.answer.references?.length);
+      if (data.answer.references?.[0]) {
+        console.log("First reference sample:", JSON.stringify(data.answer.references[0], null, 2).substring(0, 500));
+      }
+    }
+    
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("API Route Error:", error);
