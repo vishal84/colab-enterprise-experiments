@@ -1,0 +1,50 @@
+{
+  "boardName": "Colab Enterprise Experiments Architecture",
+  "description": "System architecture for the multimodal PDF search pipeline and frontend.",
+  "frames": [
+    {
+      "id": "frame_phase1",
+      "title": "Phase 1: Infrastructure (Terraform)",
+      "geometry": { "width": 800, "height": 400 },
+      "position": { "x": -900, "y": 0 },
+      "items": [
+        { "type": "sticky_note", "content": "VPC Network", "position": { "x": -1100, "y": -50 }, "style": { "fillColor": "#4285F4" } },
+        { "type": "sticky_note", "content": "Subnetwork", "position": { "x": -900, "y": -50 }, "style": { "fillColor": "#4285F4" } },
+        { "type": "sticky_note", "content": "Cloud NAT & Router", "position": { "x": -700, "y": -50 }, "style": { "fillColor": "#4285F4" } },
+        { "type": "sticky_note", "content": "IAM & API Enablement", "position": { "x": -900, "y": 100 }, "style": { "fillColor": "#FBBC04" } }
+      ]
+    },
+    {
+      "id": "frame_phase2",
+      "title": "Phase 2: Data Pipeline (Colab Enterprise)",
+      "geometry": { "width": 1000, "height": 600 },
+      "position": { "x": 100, "y": 0 },
+      "items": [
+        { "type": "sticky_note", "content": "PDF Source (GCS)", "position": { "x": -200, "y": -150 }, "style": { "fillColor": "#34A853" } },
+        { "type": "sticky_note", "content": "Gemini 2.5 Vision (Spatial Extraction)", "position": { "x": 100, "y": -150 }, "style": { "fillColor": "#EA4335" } },
+        { "type": "sticky_note", "content": "PyMuPDF (Masking & Cropping)", "position": { "x": 400, "y": -150 }, "style": { "fillColor": "#FBBC04" } },
+        { "type": "sticky_note", "content": "Document AI (OCR)", "position": { "x": 100, "y": 0 }, "style": { "fillColor": "#EA4335" } },
+        { "type": "sticky_note", "content": "Vertex AI Search (Data Store)", "position": { "x": 100, "y": 150 }, "style": { "fillColor": "#4285F4" } }
+      ]
+    },
+    {
+      "id": "frame_phase3",
+      "title": "Phase 3: Search Frontend (Next.js)",
+      "geometry": { "width": 800, "height": 400 },
+      "position": { "x": 1100, "y": 0 },
+      "items": [
+        { "type": "sticky_note", "content": "Next.js UI (Chat)", "position": { "x": 900, "y": -50 }, "style": { "fillColor": "#4285F4" } },
+        { "type": "sticky_note", "content": "Search API Proxy", "position": { "x": 1100, "y": -50 }, "style": { "fillColor": "#FBBC04" } },
+        { "type": "sticky_note", "content": "Image API Proxy (GCS Auth)", "position": { "x": 1300, "y": -50 }, "style": { "fillColor": "#FBBC04" } }
+      ]
+    }
+  ],
+  "connectors": [
+    { "start": "PDF Source (GCS)", "end": "Gemini 2.5 Vision (Spatial Extraction)", "style": { "strokeColor": "#333333" } },
+    { "start": "Gemini 2.5 Vision (Spatial Extraction)", "end": "PyMuPDF (Masking & Cropping)", "style": { "strokeColor": "#333333" } },
+    { "start": "PyMuPDF (Masking & Cropping)", "end": "Document AI (OCR)", "style": { "strokeColor": "#333333" } },
+    { "start": "Document AI (OCR)", "end": "Vertex AI Search (Data Store)", "style": { "strokeColor": "#333333" } },
+    { "start": "Next.js UI (Chat)", "end": "Search API Proxy", "style": { "strokeColor": "#333333" } },
+    { "start": "Search API Proxy", "end": "Vertex AI Search (Data Store)", "style": { "strokeColor": "#333333" } }
+  ]
+}
