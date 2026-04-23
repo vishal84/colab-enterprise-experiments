@@ -1,3 +1,10 @@
+# /// script
+# dependencies = [
+#   "requests>=2.31.0",
+#   "python-dotenv>=1.0.0",
+# ]
+# ///
+
 import json
 import requests
 import os

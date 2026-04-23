@@ -2,7 +2,7 @@
 name = "colab-enterprise-scripts"
 version = "0.1.0"
 description = "Utility scripts for Miro and project automation"
-authors = [{ name = "Antigravity Agent" }]
+authors = [{ name = "Vishal Patel" }]
 dependencies = [
     "requests>=2.31.0",
     "python-dotenv>=1.0.0",
