@@ -17,3 +17,5 @@ terraform.rc
 # Frontend
 node_modules/
 .next/
+
+.venv
